@@ -201,13 +201,13 @@
 
         public static void LoadDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            string fullPath = Application.dataPath + definitionSet._path;
+            string fullPath = Application.streamingAssetsPath + definitionSet._path;
             DataUtility.LoadOverwrite(fullPath, definitionSet);
         }
 
         public static void SaveDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            string fullPath = Application.dataPath + definitionSet._path;
+            string fullPath = Application.streamingAssetsPath + definitionSet._path;
             DataUtility.Save(fullPath, definitionSet);
         }
 
