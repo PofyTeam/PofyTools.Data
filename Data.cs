@@ -21,12 +21,12 @@
 
         public virtual bool Initialize()
         {
-            if (!this.IsInitialized)
+            if (!this.isInitialized)
             {
                 if (this._content.Count == 0)
                 {
                     BuildDictionary();
-                    this.IsInitialized = true;
+                    this.isInitialized = true;
                     return true;
                 }
 
@@ -39,7 +39,7 @@
         protected void BuildDictionary()
         {
             this.content.Clear();
-            
+
             //Add content from list to dictionary
             foreach (var element in this._content)
             {
@@ -49,7 +49,7 @@
             }
         }
 
-        public virtual bool IsInitialized { get; protected set; }
+        public virtual bool isInitialized { get; protected set; }
 
         /// <summary>
         /// Gets content's element via key.
@@ -60,7 +60,7 @@
         {
             TValue result = default(TValue);
 
-            if (!this.IsInitialized)
+            if (!this.isInitialized)
             {
                 Debug.LogWarning("Data Set Not Initialized! " + typeof(TValue).ToString());
                 return result;
@@ -140,14 +140,32 @@
         /// Definition set file path.
         /// </summary>
         protected string _path;
+        protected string _filename;
+        protected string _extension;
+
+        protected bool _scrable;
+        protected bool _encode;
+
+        public string FullPath
+        {
+            get
+            {
+                return this._path + "/" + this._filename + "." + this._extension;
+            }
+        }
 
         /// <summary>
         /// Definition Set via file path
         /// </summary>
         /// <param name="path">Definition set file path.</param>
-        public DefinitionSet(string path)
+        public DefinitionSet(string fullPath, string filename, bool scramble = false, bool encode = false, string extension = "")
         {
-            this._path = path;
+            this._path = fullPath;
+            this._filename = filename;
+            this._extension = extension;
+
+            this._encode = encode;
+            this._scrable = scramble;
         }
 
         #region IInitializable implementation
@@ -201,14 +219,12 @@
 
         public static void LoadDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            string fullPath = Application.streamingAssetsPath + definitionSet._path;
-            DataUtility.LoadOverwrite(fullPath, definitionSet);
+            DataUtility.LoadOverwrite(definitionSet.FullPath, definitionSet, definitionSet._scrable, definitionSet._encode);
         }
 
         public static void SaveDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            string fullPath = Application.streamingAssetsPath + definitionSet._path;
-            DataUtility.Save(fullPath, definitionSet);
+            DataUtility.Save(definitionSet._path, definitionSet._filename, definitionSet, definitionSet._scrable, definitionSet._encode, definitionSet._extension);
         }
 
         #endregion
@@ -349,6 +365,7 @@
             json = (decode) ? DataUtility.DecodeFrom64(json) : json;
 
             JsonUtility.FromJsonOverwrite(json, objectToOverwrite);
+            Debug.LogFormat("{0}File \"{1}\" loaded successfully!", TAG, fullPath);
             return LoadResult.Done;
         }
 
@@ -357,19 +374,39 @@
         #endregion
 
         #region SAVE
-
-        public static void Save(string fullPath, object objectToSave, bool scramble = false, bool encode = false)
+        [System.Flags]
+        public enum SaveResult : int
         {
+            Done = 1 << 0,
+            NullObject = 1 << 1,
+            NullPath = 1 << 2,
+            DirectoryCreated = 1 << 3,
+        }
+
+        public static SaveResult Save(string fullPath, string filename, object objectToSave, bool scramble = false, bool encode = false, string extension = "")
+        {
+            SaveResult result = 0;
+
+            //Check input
             if (objectToSave == null)
             {
                 Debug.LogWarningFormat("{0}Object you are trying to save is NULL! Aborting... (\"{1}\")", TAG, fullPath);
-                return;
+                result = result.Add(SaveResult.NullObject);
+                return result;
             }
 
+            //Check Path
             if (string.IsNullOrEmpty(fullPath))
             {
                 Debug.LogWarningFormat("{0}Invalid path! Aborting...", TAG);
-                return;
+                result = result.Add(SaveResult.NullPath);
+                return result;
+            }
+
+            if (!Directory.Exists(fullPath))
+            {
+                Directory.CreateDirectory(fullPath);
+                result = result.Add(SaveResult.DirectoryCreated);
             }
 
             var json = JsonUtility.ToJson(objectToSave);
@@ -377,7 +414,11 @@
             json = (encode) ? DataUtility.EncodeTo64(json) : json;
             json = (scramble) ? DataUtility.Scramble(json) : json;
 
-            File.WriteAllText(fullPath, json);
+            File.WriteAllText(fullPath + "/" + filename + "." + extension, json);
+
+            result = result.Add(SaveResult.Done);
+            Debug.LogFormat("{0}File \"{1}\" saved successfully!", TAG, fullPath + "/" + filename + "." + extension);
+            return result;
         }
 
         #endregion
