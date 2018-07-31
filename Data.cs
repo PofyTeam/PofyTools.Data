@@ -21,12 +21,12 @@
 
         public virtual bool Initialize()
         {
-            if (!this.isInitialized)
+            if (!this.IsInitialized)
             {
                 if (this._content.Count == 0)
                 {
                     BuildDictionary();
-                    this.isInitialized = true;
+                    this.IsInitialized = true;
                     return true;
                 }
 
@@ -49,7 +49,7 @@
             }
         }
 
-        public virtual bool isInitialized { get; protected set; }
+        public virtual bool IsInitialized { get; protected set; }
 
         /// <summary>
         /// Gets content's element via key.
@@ -60,7 +60,7 @@
         {
             TValue result = default(TValue);
 
-            if (!this.isInitialized)
+            if (!this.IsInitialized)
             {
                 Debug.LogWarning("Data Set Not Initialized! " + typeof(TValue).ToString());
                 return result;
@@ -525,6 +525,34 @@
             }
 
             File.WriteAllBytes(fullPath, texture.EncodeToPNG());
+        }
+
+        #endregion
+
+        #region Strings
+
+        public static List<string> OptimizeStringList(List<string> toOptimize)
+        {
+            toOptimize.Sort();
+            for (int i = toOptimize.Count - 1; i >= 0; --i)
+            {
+                toOptimize[i] = toOptimize[i].Trim().ToLower();
+                if (i < toOptimize.Count - 1)
+                {
+                    var left = toOptimize[i];
+                    var right = toOptimize[i + 1];
+                    if (left == right)
+                    {
+                        toOptimize.RemoveAt(i);
+                    }
+                }
+            }
+            return toOptimize;
+        }
+
+        public static string OptimizeString(string toOptimize)
+        {
+            return toOptimize.Trim().ToLower();
         }
 
         #endregion
