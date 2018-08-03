@@ -60,7 +60,7 @@ namespace PofyTools.Data
         {
             if (!this.IsInitialized)
             {
-                this.content = new Dictionary<string, CategoryData>(categoryDefs.Count);
+                this._contentDictionary = new Dictionary<string, CategoryData>(categoryDefs.Count);
 
                 foreach (var category in categoryDefs)
                 {
@@ -70,7 +70,7 @@ namespace PofyTools.Data
                     this._content.Add(data);
 
                     //dictionary
-                    this.content[data.id] = data;
+                    this._contentDictionary[data.id] = data;
 
                     if (category.baseCategories.Count == 0)
                     {
@@ -95,7 +95,7 @@ namespace PofyTools.Data
                     foreach (var baseCategory in data.Definition.baseCategories)
                     {
                         CategoryData baseData;
-                        if (this.content.TryGetValue(baseCategory, out baseData))
+                        if (this._contentDictionary.TryGetValue(baseCategory, out baseData))
                         {
                             baseData.AddSubcategory(data);
                         }

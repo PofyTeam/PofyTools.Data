@@ -17,15 +17,15 @@
         [SerializeField]
         protected List<TValue> _content = new List<TValue>();
 
-        public Dictionary<TKey, TValue> content = new Dictionary<TKey, TValue>();
+        protected Dictionary<TKey, TValue> _contentDictionary = new Dictionary<TKey, TValue>();
 
         public virtual bool Initialize()
         {
             if (!this.IsInitialized)
             {
-                if (this._content.Count == 0)
+                if (this._content.Count != 0)
                 {
-                    BuildDictionary();
+                    BuildDictionaries();
                     this.IsInitialized = true;
                     return true;
                 }
@@ -36,16 +36,16 @@
             return false;
         }
 
-        protected void BuildDictionary()
+        protected virtual void BuildDictionaries()
         {
-            this.content.Clear();
+            this._contentDictionary.Clear();
 
             //Add content from list to dictionary
             foreach (var element in this._content)
             {
-                if (this.content.ContainsKey(element.id))
+                if (this._contentDictionary.ContainsKey(element.id))
                     Debug.LogWarning("Id " + element.id + " present in the set. Overwriting...");
-                this.content[element.id] = element;
+                this._contentDictionary[element.id] = element;
             }
         }
 
@@ -66,7 +66,7 @@
                 return result;
             }
 
-            if (!this.content.TryGetValue(key, out result))
+            if (!this._contentDictionary.TryGetValue(key, out result))
                 Debug.LogWarning("Value Not Found For Key: " + key);
 
             return result;
@@ -78,7 +78,7 @@
         /// <returns>Random element</returns>
         public TValue GetRandom()
         {
-            return this._content.GetRandom();
+            return this._content.TryGetRandom();
         }
 
         /// <summary>
@@ -125,7 +125,7 @@
 
         public List<TKey> GetKeys()
         {
-            return new List<TKey>(this.content.Keys);
+            return new List<TKey>(this._contentDictionary.Keys);
         }
     }
 
@@ -187,31 +187,17 @@
         public void Load()
         {
             //Read the list content from file
-            DefinitionSet<T>.LoadDefinitionSet(this);
-
-            ////Create set's dictionary same size as list
-            //this.content = new Dictionary<string, T>(this._content.Count);
-
-            ////Add definitions from list to dicionary
-            //foreach (var def in this._content)
-            //{
-            //    if (this.content.ContainsKey(def.id))
-            //        Debug.LogWarning("Key " + def.id + " present in the set. Overwriting...");
-            //    this.content[def.id] = def;
-            //}
+            LoadDefinitionSet(this);
         }
 
         public void Reload()
         {
-            DefinitionSet<T>.LoadDefinitionSet(this);
-            this.content.Clear();
+            LoadDefinitionSet(this);
+
+            this._contentDictionary.Clear();
+
             //Add definitions from list to dicionary
-            foreach (var def in this._content)
-            {
-                if (this.content.ContainsKey(def.id))
-                    Debug.LogWarning("Key " + def.id + " present in the set. Overwriting...");
-                this.content[def.id] = def;
-            }
+            BuildDictionaries();
         }
         #endregion
 
@@ -294,6 +280,63 @@
 
         #endregion
     }
+
+    #region Rarity Definition
+
+    public enum Rarity
+    {
+        None = 0,
+        Common = 1000,
+        Rare = 100,
+        Epic = 10,
+        Legendary = 1,
+    }
+
+    public abstract class RarityDefinition : Definition
+    {
+        public Rarity rarity;
+    }
+
+    [System.Serializable]
+    public class RarityDefinitionSet<TValue> : DefinitionSet<TValue> where TValue : RarityDefinition
+    {
+        protected Dictionary<Rarity, List<TValue>> _rarityDictionary = new Dictionary<Rarity, List<TValue>>();
+
+        public RarityDefinitionSet(string fullPath, string filename, bool scramble = false, bool encode = false, string extension = "") : base(fullPath, filename, scramble, encode, extension)
+        {
+        }
+
+        protected override void BuildDictionaries()
+        {
+            this._rarityDictionary.Clear();
+
+            //Create rarity dictionary
+            foreach (Rarity rarity in System.Enum.GetValues(typeof(Rarity)))
+            {
+                this._rarityDictionary[rarity] = new List<TValue>();
+            }
+
+            this._contentDictionary.Clear();
+
+            //Add content from list to dictionary
+            foreach (var element in this._content)
+            {
+                //Add to rarity dicitionary
+                this._rarityDictionary[element.rarity].Add(element);
+
+                if (this._contentDictionary.ContainsKey(element.id))
+                    Debug.LogWarning("Id " + element.id + " present in the set. Overwriting...");
+                this._contentDictionary[element.id] = element;
+            }
+        }
+
+        public TValue GetRandomByRarity(Rarity rarity)
+        {
+            return this._rarityDictionary[rarity].TryGetRandom();
+
+        }
+    }
+    #endregion
 
     public interface IDefinable<T> where T : Definition
     {
