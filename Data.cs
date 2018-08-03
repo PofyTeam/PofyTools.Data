@@ -281,63 +281,6 @@
         #endregion
     }
 
-    #region Rarity Definition
-
-    public enum Rarity
-    {
-        None = 0,
-        Common = 1000,
-        Rare = 100,
-        Epic = 10,
-        Legendary = 1,
-    }
-
-    public abstract class RarityDefinition : Definition
-    {
-        public Rarity rarity;
-    }
-
-    [System.Serializable]
-    public class RarityDefinitionSet<TValue> : DefinitionSet<TValue> where TValue : RarityDefinition
-    {
-        protected Dictionary<Rarity, List<TValue>> _rarityDictionary = new Dictionary<Rarity, List<TValue>>();
-
-        public RarityDefinitionSet(string fullPath, string filename, bool scramble = false, bool encode = false, string extension = "") : base(fullPath, filename, scramble, encode, extension)
-        {
-        }
-
-        protected override void BuildDictionaries()
-        {
-            this._rarityDictionary.Clear();
-
-            //Create rarity dictionary
-            foreach (Rarity rarity in System.Enum.GetValues(typeof(Rarity)))
-            {
-                this._rarityDictionary[rarity] = new List<TValue>();
-            }
-
-            this._contentDictionary.Clear();
-
-            //Add content from list to dictionary
-            foreach (var element in this._content)
-            {
-                //Add to rarity dicitionary
-                this._rarityDictionary[element.rarity].Add(element);
-
-                if (this._contentDictionary.ContainsKey(element.id))
-                    Debug.LogWarning("Id " + element.id + " present in the set. Overwriting...");
-                this._contentDictionary[element.id] = element;
-            }
-        }
-
-        public TValue GetRandomByRarity(Rarity rarity)
-        {
-            return this._rarityDictionary[rarity].TryGetRandom();
-
-        }
-    }
-    #endregion
-
     public interface IDefinable<T> where T : Definition
     {
         T Definition
