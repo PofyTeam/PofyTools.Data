@@ -172,7 +172,7 @@
 
         public override bool Initialize()
         {
-            Load();
+            //Load();
             return base.Initialize();
         }
 
@@ -186,18 +186,7 @@
 
         public void Load()
         {
-            //Read the list content from file
             LoadDefinitionSet(this);
-        }
-
-        public void Reload()
-        {
-            LoadDefinitionSet(this);
-
-            this._contentDictionary.Clear();
-
-            //Add definitions from list to dicionary
-            BuildDictionaries();
         }
         #endregion
 
