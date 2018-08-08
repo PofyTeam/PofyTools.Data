@@ -154,6 +154,14 @@
             }
         }
 
+        public string ResourcePath
+        {
+            get
+            {
+                return this._path + "/" + this._filename;
+            }
+        }
+
         /// <summary>
         /// Definition Set via file path
         /// </summary>
@@ -194,12 +202,15 @@
 
         public static void LoadDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            DataUtility.LoadOverwrite(definitionSet.FullPath, definitionSet, definitionSet._scrable, definitionSet._encode);
+            //DataUtility.LoadOverwrite(definitionSet.FullPath, definitionSet, definitionSet._scrable, definitionSet._encode);
+            DataUtility.ResourceLoad(definitionSet.ResourcePath, definitionSet, definitionSet._scrable, definitionSet._encode);
+
         }
 
         public static void SaveDefinitionSet(DefinitionSet<T> definitionSet)
         {
-            DataUtility.Save(definitionSet._path, definitionSet._filename, definitionSet, definitionSet._scrable, definitionSet._encode, definitionSet._extension);
+            //DataUtility.Save(definitionSet._path, definitionSet._filename, definitionSet, definitionSet._scrable, definitionSet._encode, definitionSet._extension);
+            DataUtility.ResourceSave(definitionSet._path, definitionSet._filename, definitionSet, definitionSet._scrable, definitionSet._encode, definitionSet._extension);
         }
 
         #endregion
@@ -344,6 +355,32 @@
             return LoadResult.Done;
         }
 
+        public static LoadResult ResourceLoad(string relativePath, object objectToOverwrite, bool unscramble = false, bool decode = false)
+        {
+            if (objectToOverwrite == null)
+            {
+                Debug.LogWarningFormat("{0}Object to overwrite is NULL! Aborting... (\"{1}\")", TAG, relativePath);
+                return LoadResult.NullObject;
+            }
+
+            var textAsset = Resources.Load<TextAsset>(relativePath);
+
+            if (textAsset == null)
+            {
+                Debug.LogWarningFormat("{0}File \"{1}\" not found! Aborting...", TAG, relativePath);
+                return LoadResult.FileNotFound;
+            }
+
+            string json = textAsset.text;
+
+            json = (unscramble) ? DataUtility.UnScramble(json) : json;
+            json = (decode) ? DataUtility.DecodeFrom64(json) : json;
+
+            JsonUtility.FromJsonOverwrite(json, objectToOverwrite);
+            Debug.LogFormat("{0}File \"{1}\" loaded successfully!", TAG, relativePath);
+            return LoadResult.Done;
+        }
+
         //TODO: T Load
 
         #endregion
@@ -394,6 +431,13 @@
             result = result.Add(SaveResult.Done);
             Debug.LogFormat("{0}File \"{1}\" saved successfully!", TAG, fullPath + "/" + filename + "." + extension);
             return result;
+        }
+
+        public static SaveResult ResourceSave(string relativePath, string filename, object objectToSave, bool scramble = false, bool encode = false, string extension = "")
+        {
+            string fullPath = Application.dataPath + "/Resources/" + relativePath;
+            return Save(fullPath, filename, objectToSave, scramble, encode, extension);
+
         }
 
         #endregion
