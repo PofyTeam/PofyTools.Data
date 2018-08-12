@@ -577,4 +577,87 @@
         #endregion
     }
 
+    /// <summary>
+    /// String Float Pair.
+    /// </summary>
+    [System.Serializable]
+    public struct StringValue
+    {
+        [SerializeField]
+        private string _key;
+        public string Key
+        {
+            get { return this._key; }
+        }
+        public float value;
+
+        public StringValue(string key, float value)
+        {
+            this._key = key;
+            this.value = value;
+        }
+
+        public StringValue(string key)
+        {
+            this._key = key;
+            this.value = 0f;
+        }
+
+        #region Implicit Casts
+
+        public static implicit operator float(StringValue stringValue)
+        {
+            return stringValue.value;
+        }
+
+        public static implicit operator string(StringValue stringValue)
+        {
+            return stringValue._key;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// String Int Pair.
+    /// </summary>
+    [System.Serializable]
+    public struct StringAmount
+    {
+        [SerializeField]
+        private string _key;
+        public string Key
+        {
+            get { return this._key; }
+        }
+        public int amount;
+
+        public StringAmount(string key, int amount)
+        {
+            this._key = key;
+            this.amount = amount;
+        }
+
+        public StringAmount(string key)
+        {
+            this._key = key;
+            this.amount = 0;
+        }
+
+        #region Implicit Casts
+
+        public static implicit operator int(StringAmount stringAmount)
+        {
+            return stringAmount.amount;
+        }
+
+        public static implicit operator string(StringAmount stringAmount)
+        {
+            return stringAmount._key;
+        }
+
+        #endregion
+    }
+
+
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Extensions;
 
 namespace PofyTools.Data
 {
@@ -23,9 +24,6 @@ namespace PofyTools.Data
         [Header("Base Categories")]
         public List<string> baseCategories = new List<string>();
 
-        //[Header("NameSet")]
-        //public NameSet nameSet;
-        //public NameSet influenceSet;
     }
 
     public class CategoryData : DefinableData<CategoryDefinition>
@@ -33,14 +31,29 @@ namespace PofyTools.Data
         public CategoryData(CategoryDefinition definition) : base(definition) { }
 
         #region API
+
         public void AddSubcategory(CategoryData data)
         {
-            this.subcategories.Add(data.id);
+            this.subcategories.AddOnce(data);
+            foreach (var cat in this.supercategories)
+            {
+                cat.AddSubcategory(data);
+            }
+        }
+
+        public void AddSupercategory(CategoryData data)
+        {
+            this.supercategories.AddOnce(data);
+            foreach (var cat in this.subcategories)
+            {
+                cat.AddSupercategory(data);
+            }
         }
         #endregion
 
         #region Runtime Data
-        public List<string> subcategories = new List<string>();
+        public List<CategoryData> subcategories = new List<CategoryData>();
+        public List<CategoryData> supercategories = new List<CategoryData>();
         #endregion
     }
 
@@ -55,6 +68,11 @@ namespace PofyTools.Data
         /// Topmost categories.
         /// </summary>
         public List<CategoryData> rootCategories = new List<CategoryData>();
+
+        /// <summary>
+        /// Bottommost categories.
+        /// </summary>
+        public List<CategoryData> leafCategory = new List<CategoryData>();
 
         public bool Initialize(List<CategoryDefinition> categoryDefs)
         {
@@ -89,7 +107,7 @@ namespace PofyTools.Data
         {
             if (!this.IsInitialized)
             {
-
+                //find subcategories
                 foreach (var data in this._content)
                 {
                     foreach (var baseCategory in data.Definition.baseCategories)
@@ -99,9 +117,37 @@ namespace PofyTools.Data
                         {
                             baseData.AddSubcategory(data);
                         }
+
+                        data.AddSupercategory(baseData);
                     }
                 }
-                PofyTools.UI.NotificationView.Show("Game Definitions Initialized!", null, -1f);
+
+                //find leafs
+                foreach (var data in this._content)
+                {
+                    if (data.subcategories.Count == 0)
+                        this.leafCategory.Add(data);
+                }
+
+                //Propagate rootcategories
+                foreach (var data in this.rootCategories)
+                {
+                    foreach (var sub in data.subcategories)
+                    {
+                        sub.AddSupercategory(data);
+                    }
+                }
+
+                //Propagate leafs
+                foreach (var data in this.leafCategory)
+                {
+                    foreach (var super in data.supercategories)
+                    {
+                        super.AddSubcategory(data);
+                    }
+                }
+
+                //PofyTools.UI.NotificationView.Show("Game Definitions Initialized!", null, -1f);
                 this.IsInitialized = true;
                 return true;
             }
