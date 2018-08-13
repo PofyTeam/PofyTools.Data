@@ -187,12 +187,12 @@
         #endregion
 
         #region Instance Methods
-        public void Save()
+        public virtual void Save()
         {
             SaveDefinitionSet(this);
         }
 
-        public void Load()
+        public virtual void Load()
         {
             LoadDefinitionSet(this);
         }
@@ -242,6 +242,11 @@
     public abstract class Data<T>
     {
         public T id;
+
+        public static implicit operator T(Data<T> data)
+        {
+            return data.id;
+        }
     }
 
     public abstract class Definition : Data<string>
@@ -548,7 +553,7 @@
 
         #endregion
 
-        #region Strings
+        #region Utilities
 
         public static List<string> OptimizeStringList(List<string> toOptimize)
         {
@@ -572,6 +577,16 @@
         public static string OptimizeString(string toOptimize)
         {
             return toOptimize.Trim().ToLower();
+        }
+
+        public static void OptimizeDefinitions<T>(List<T> definitions) where T : Definition
+        {
+            foreach (var definition in definitions)
+            {
+                definition.id = OptimizeString(definition.id);
+            }
+
+            definitions.Sort((x, y) => x.id.CompareTo(y.id));
         }
 
         #endregion
