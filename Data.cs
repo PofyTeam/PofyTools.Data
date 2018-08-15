@@ -1,6 +1,7 @@
 ﻿namespace PofyTools.Data
 {
     using Extensions;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
@@ -12,7 +13,7 @@
     /// <typeparam name="TKey"> Key Type.</typeparam>
     /// <typeparam name="TValue">Value Type.</typeparam>
     [System.Serializable]
-    public abstract class DataSet<TKey, TValue> : IInitializable, IContentProvider<List<TValue>> where TValue : Data<TKey>
+    public abstract class DataSet<TKey, TValue> : IInitializable, IList<TValue>, IDictionary<TKey, TValue>, IContentProvider<List<TValue>> where TValue : Data<TKey>
     {
         [SerializeField]
         protected List<TValue> _content = new List<TValue>();
@@ -127,6 +128,151 @@
         {
             return new List<TKey>(this._contentDictionary.Keys);
         }
+
+        public int IndexOf(TValue item)
+        {
+            return ((IList<TValue>)this._content).IndexOf(item);
+        }
+
+        public void Insert(int index, TValue item)
+        {
+            ((IList<TValue>)this._content).Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            ((IList<TValue>)this._content).RemoveAt(index);
+        }
+
+        public TValue this[int index]
+        {
+            get
+            {
+                return ((IList<TValue>)this._content)[index];
+            }
+
+            set
+            {
+                ((IList<TValue>)this._content)[index] = value;
+            }
+        }
+
+        public void Add(TValue item)
+        {
+            ((IList<TValue>)this._content).Add(item);
+        }
+
+        public void Clear()
+        {
+            ((IList<TValue>)this._content).Clear();
+        }
+
+        public bool Contains(TValue item)
+        {
+            return ((IList<TValue>)this._content).Contains(item);
+        }
+
+        public void CopyTo(TValue[] array, int arrayIndex)
+        {
+            ((IList<TValue>)this._content).CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(TValue item)
+        {
+            return ((IList<TValue>)this._content).Remove(item);
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return ((IList<TValue>)this._content).IsReadOnly;
+            }
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            return ((IList<TValue>)this._content).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IList<TValue>)this._content).GetEnumerator();
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            ((IDictionary<TKey, TValue>)this._contentDictionary).Add(key, value);
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).ContainsKey(key);
+        }
+
+        public bool Remove(TKey key)
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).Remove(key);
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).TryGetValue(key, out value);
+        }
+
+        public TValue this[TKey key]
+        {
+            get
+            {
+                return ((IDictionary<TKey, TValue>)this._contentDictionary)[key];
+            }
+
+            set
+            {
+                ((IDictionary<TKey, TValue>)this._contentDictionary)[key] = value;
+            }
+        }
+
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                return ((IDictionary<TKey, TValue>)this._contentDictionary).Keys;
+            }
+        }
+
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                return ((IDictionary<TKey, TValue>)this._contentDictionary).Values;
+            }
+        }
+
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
+            ((IDictionary<TKey, TValue>)this._contentDictionary).Add(item);
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            ((IDictionary<TKey, TValue>)this._contentDictionary).CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).Remove(item);
+        }
+
+        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+        {
+            return ((IDictionary<TKey, TValue>)this._contentDictionary).GetEnumerator();
+        }
     }
 
     /// <summary>
@@ -222,12 +368,37 @@
     /// <typeparam name="TData">Data Type</typeparam>
     /// <typeparam name="TDefinition">Definition Type</typeparam>
     [System.Serializable]
-    public class DefinableDataSet<TData, TDefinition> : DataSet<string, TData> where TData : DefinableData<TDefinition> where TDefinition : Definition
+    public class DefinableDataSet<TData, TDefinition> : DataSet<string, TData> where TDefinition : Definition where TData : DefinableData<TDefinition>, new()
     {
-        public override bool Initialize()
+        public DefinableDataSet() { }
+
+        public DefinableDataSet(DefinitionSet<TDefinition> definitionSet)
         {
-            return base.Initialize();
+            Initialize(definitionSet.GetContent());
         }
+
+        public DefinableDataSet(List<TDefinition> _content)
+        {
+            Initialize(_content);
+        }
+
+        public bool Initialize(List<TDefinition> _content)
+        {
+            foreach (var element in _content)
+            {
+                TData data = new TData();
+                data.Define(element);
+
+                this._content.Add(data);
+            }
+
+            return Initialize();
+        }
+
+        //public override bool Initialize()
+        //{
+        //    return base.Initialize();
+        //}
 
         public void DefineSet(DefinitionSet<TDefinition> definitionSet)
         {
@@ -256,6 +427,7 @@
 
     public class DefinableData<T> : Data<string>, IDefinable<T> where T : Definition
     {
+        public DefinableData() { }
         public DefinableData(T definition)
         {
             Define(definition);
