@@ -82,6 +82,21 @@ namespace PofyTools.Data
                 cat.AddSupercategory(data);
             }
         }
+
+        public bool IsCategoryOf(string category)
+        {
+            if (this.id == category) return true;
+
+            foreach (var cat in this.descriptor.supercategoryIds)
+            {
+                if (category == cat)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
         #endregion
 
         #region Runtime Data
@@ -230,4 +245,9 @@ namespace PofyTools.Data
         }
     }
 
+    public interface ICategorizable
+    {
+        CategoryData CategoryData { get; }
+        void Categorize(CategoryData data);
+    }
 }
