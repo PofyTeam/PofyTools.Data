@@ -73,6 +73,11 @@
             return result;
         }
 
+        public bool ContainsValue(TKey key)
+        {
+            return this._content.Exists(x => x.id.Equals(key));
+        }
+
         /// <summary>
         /// Gets random element from content.
         /// </summary>
@@ -131,105 +136,102 @@
 
         public int IndexOf(TValue item)
         {
-            return ((IList<TValue>)this._content).IndexOf(item);
+            return this._content.IndexOf(item);
         }
 
         public void Insert(int index, TValue item)
         {
-            ((IList<TValue>)this._content).Insert(index, item);
+            this._content.Insert(index, item);
         }
 
         public void RemoveAt(int index)
         {
-            ((IList<TValue>)this._content).RemoveAt(index);
+            this._content.RemoveAt(index);
         }
 
         public TValue this[int index]
         {
             get
             {
-                return ((IList<TValue>)this._content)[index];
+                return this._content[index];
             }
 
             set
             {
-                ((IList<TValue>)this._content)[index] = value;
+                this._content[index] = value;
             }
         }
 
         public void Add(TValue item)
         {
-            ((IList<TValue>)this._content).Add(item);
+            this._content.Add(item);
         }
 
         public void Clear()
         {
-            ((IList<TValue>)this._content).Clear();
+            this._content.Clear();
         }
 
         public bool Contains(TValue item)
         {
-            return ((IList<TValue>)this._content).Contains(item);
+            return this._content.Contains(item);
         }
 
         public void CopyTo(TValue[] array, int arrayIndex)
         {
-            ((IList<TValue>)this._content).CopyTo(array, arrayIndex);
+            this._content.CopyTo(array, arrayIndex);
         }
 
         public bool Remove(TValue item)
         {
-            return ((IList<TValue>)this._content).Remove(item);
+            return this._content.Remove(item);
         }
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return ((IList<TValue>)this._content).IsReadOnly;
-            }
-        }
+        public bool IsReadOnly { get { return ((IList<TValue>)this._content).IsReadOnly; } }
 
         public IEnumerator<TValue> GetEnumerator()
         {
-            return ((IList<TValue>)this._content).GetEnumerator();
+            return this._content.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IList<TValue>)this._content).GetEnumerator();
+            return this._content.GetEnumerator();
         }
 
         public void Add(TKey key, TValue value)
         {
-            ((IDictionary<TKey, TValue>)this._contentDictionary).Add(key, value);
+            if (value.id.Equals(key))
+            {
+                this._contentDictionary.Add(key, value);
+            }
         }
 
         public bool ContainsKey(TKey key)
         {
-            return ((IDictionary<TKey, TValue>)this._contentDictionary).ContainsKey(key);
+            return this._contentDictionary.ContainsKey(key);
         }
 
         public bool Remove(TKey key)
         {
-            return ((IDictionary<TKey, TValue>)this._contentDictionary).Remove(key);
+            return this._contentDictionary.Remove(key);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            return ((IDictionary<TKey, TValue>)this._contentDictionary).TryGetValue(key, out value);
+            return this._contentDictionary.TryGetValue(key, out value);
         }
 
         public TValue this[TKey key]
         {
             get
             {
-                return ((IDictionary<TKey, TValue>)this._contentDictionary)[key];
+                return this._contentDictionary[key];
             }
 
             set
             {
-                ((IDictionary<TKey, TValue>)this._contentDictionary)[key] = value;
+                this._contentDictionary[key] = value;
             }
         }
 
@@ -237,7 +239,7 @@
         {
             get
             {
-                return ((IDictionary<TKey, TValue>)this._contentDictionary).Keys;
+                return this._contentDictionary.Keys;
             }
         }
 
@@ -245,7 +247,7 @@
         {
             get
             {
-                return ((IDictionary<TKey, TValue>)this._contentDictionary).Values;
+                return this._contentDictionary.Values;
             }
         }
 
@@ -341,6 +343,7 @@
         public virtual void Load()
         {
             LoadDefinitionSet(this);
+            this.IsInitialized = false;
         }
         #endregion
 
@@ -412,7 +415,7 @@
 
     public abstract class Data<T>
     {
-        public T id;
+        public T id = default(T);
 
         public static implicit operator T(Data<T> data)
         {
